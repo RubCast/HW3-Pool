@@ -33,10 +33,10 @@ struct Wall {
 int main() {
     
     Ball Balls[4] = {
-        {400, 400, 100.0f, RED, 1.5f, 1 / Balls[0].mass,Vector2Zero(), Vector2Zero()}, 
+        {400, 400, 30.0f, RED, 1.5f, 1 / Balls[0].mass,Vector2Zero(), Vector2Zero()}, 
         {100, 100, 30.0f, GREEN, 0.4f, 1 / Balls[1].mass, Vector2Zero(), Vector2Zero()},
-        {150, 150, 60.0f, BLUE, 2.0f, 1 / Balls[2].mass, Vector2Zero(), Vector2Zero()},
-        {200, 200, 45.0f, ORANGE, 7.0f, 1 / Balls[3].mass, Vector2Zero(), Vector2Zero()}
+        {150, 150, 30.0f, BLUE, 2.0f, 1 / Balls[2].mass, Vector2Zero(), Vector2Zero()},
+        {200, 200, 30.0f, ORANGE, 7.0f, 1 / Balls[3].mass, Vector2Zero(), Vector2Zero()}
     };
 
     Wall Walls[4] = {
@@ -52,7 +52,7 @@ int main() {
     SetTargetFPS(FPS);
 
     float accumulator = 0;
-    float elasticity = 0; 
+    float elasticity = 1; 
     while (!WindowShouldClose()) {
         float delta_time = GetFrameTime();
         Vector2 forces = Vector2Zero(); // every frame set the forces to a 0 vector
@@ -87,13 +87,14 @@ int main() {
             // Computes for change in position using x(t + dt) = x(t) + (v(t + dt) * dt)
                 Balls[i].position = Vector2Add(Balls[i].position, Vector2Scale(Balls[i].velocity, TIMESTEP));
 
-            // Negates the velocity at x and y if the object hits a wall. (Basic Collision Detection)
-                
                 // This is for all other circles
-                for(int x = i; x < 4; x++){ // This still needs some fixes o7
-                    // add somethign that checks if it's iterating through itself ig
-                    float totalRadius = Balls[x].radius + Balls[x].radius;
-                    float distanceBetweenCircles = Vector2Distance(Balls[x].position, Balls[x].position);
+                for(int x = 0; x < 4; x++){
+                    if(x == i){
+                        x++;
+                    }
+
+                    float totalRadius = Balls[x].radius + Balls[i].radius;
+                    float distanceBetweenCircles = Vector2Distance(Balls[x].position, Balls[i].position);
 
                     Vector2 relativeVelocity = Vector2Subtract(Balls[x].velocity, Balls[i].velocity);
                     Vector2 collisionNorm = Vector2Subtract(Balls[x].position, Balls[i].position);
@@ -105,25 +106,29 @@ int main() {
 
                         Balls[i].velocity = Vector2Subtract(Balls[i].velocity, Vector2Scale(collisionNorm, impulse * Balls[i].inverse_mass));
                         Balls[x].velocity = Vector2Add(Balls[x].velocity, Vector2Scale(collisionNorm, impulse * Balls[x].inverse_mass));
-                    }          
-
-                    
+                    } 
+                }
+                
+                // Wall Collisions
+                for(int w = 0; w < 4; w++){
                     Vector2 pointOnRect;
-                    pointOnRect.x = Clamp(Balls[i].position.x, Walls[x].position.x, Walls[x].position.x + Walls[x].size.x);
-                    pointOnRect.y = Clamp(Balls[i].position.y, Walls[x].position.y, Walls[x].position.y + Walls[x].size.y);
+                    pointOnRect.x = Clamp(Balls[w].position.x, Walls[i].position.x, Walls[i].position.x + Walls[i].size.x);
+                    pointOnRect.y = Clamp(Balls[w].position.y, Walls[i].position.y, Walls[i].position.y + Walls[i].size.y);
 
-                    relativeVelocity = Vector2Subtract(Balls[i].velocity, Walls[x].velocity);
-                    collisionNorm = Vector2Subtract(Balls[i].position, pointOnRect);
-                    approachCheck = Vector2DotProduct(relativeVelocity, collisionNorm);
+                    Vector2 relativeVelocity = Vector2Subtract(Balls[w].velocity, Walls[i].velocity);
+                    Vector2 collisionNorm = Vector2Subtract(Balls[w].position, pointOnRect);
+                    float approachCheck = Vector2DotProduct(relativeVelocity, collisionNorm);
 
-                    float distRectCircle = Vector2Distance(pointOnRect, Balls[i].position);
+                    float distRectCircle = Vector2Distance(pointOnRect, Balls[w].position);
                     
-                    if((distRectCircle <= Balls[i].radius) && (approachCheck < 0)){
+                    if((distRectCircle <= Balls[w].radius) && (approachCheck < 0)){
                         float impulse = -(((1 + elasticity) * Vector2DotProduct(relativeVelocity, collisionNorm))
-                        /((Vector2DotProduct(collisionNorm, collisionNorm)) * (Walls[x].inverse_mass + Balls[i].inverse_mass)));
-                        Balls[i].velocity = Vector2Add(Balls[i].velocity, Vector2Scale(collisionNorm, impulse * Balls[i].inverse_mass));
+                        /((Vector2DotProduct(collisionNorm, collisionNorm)) * (Walls[i].inverse_mass + Balls[w].inverse_mass)));
+                        Balls[w].velocity = Vector2Add(Balls[w].velocity, Vector2Scale(collisionNorm, impulse * Balls[w].inverse_mass));
                     }
                 }
+
+                // Holes Collisions
 
             }
             // Reduces the accumulater with the TIMESTEP
