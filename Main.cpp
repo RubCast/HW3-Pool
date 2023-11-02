@@ -6,9 +6,9 @@ const int WINDOW_WIDTH = 800;
 const int WINDOW_HEIGHT = 600;
 const float FPS = 60;
 const float TIMESTEP = 1 / FPS; // Sets the timestep to 1 / FPS. But timestep can be any very small value.
-const float FRICTION = 1.0f;
+const float FRICTION = 0.3f;
 
-struct Ball {
+struct Circle {
     Vector2 position;
     float radius;
     bool is_cue;
@@ -20,7 +20,7 @@ struct Ball {
     Vector2 velocity;
 };
 
-Ball Balls[5] = {
+Circle Balls[5] = {
     {400, 400, 30.0f, true, WHITE, 0.2f, 1 / Balls[0].mass,Vector2Zero(), Vector2Zero()}, 
     {100, 100, 30.0f, false, RED, 0.2f, 1 / Balls[1].mass, Vector2Zero(), Vector2Zero()},
     {150, 150, 30.0f, false, ORANGE, 0.2f, 1 / Balls[2].mass, Vector2Zero(), Vector2Zero()},
@@ -28,7 +28,7 @@ Ball Balls[5] = {
     {200, 200, 30.0f, false, BLUE, 0.2f, 1 / Balls[4].mass, Vector2Zero(), Vector2Zero()}
 };
 
-Ball Holes[4] = {
+Circle Holes[4] = {
     {15, 15, 50.0f, false, BLACK, 100.0f, 0.0f, Vector2Zero(), Vector2Zero()},
     {785, 15, 50.0f, false, BLACK, 100.0f, 0.0f, Vector2Zero(), Vector2Zero()},
     {15, 585, 50.0f, false, BLACK, 100.0f, 0.0f, Vector2Zero(), Vector2Zero()},
@@ -52,8 +52,15 @@ Wall Walls[4] = {
     {0, 570, 800.0f, 30.0f, RED, 0.0f, 0.0f, 100.0f, 0.0f}
 };
 
-int main() {
+struct Pole {
+    Vector2 position;
+    Color color;
+    Vector2 point;
+    Vector2 finalPoint;
+}Pole;
 
+int main() {
+    Pole.color = YELLOW;
     InitWindow(WINDOW_WIDTH, WINDOW_HEIGHT, "Physics Demo");
 
     SetTargetFPS(FPS);
@@ -77,6 +84,19 @@ int main() {
         if(IsKeyDown(KEY_D)) {
             forces = Vector2Add(forces, {100, 0});
         }
+        if(IsMouseButtonDown(MOUSE_BUTTON_LEFT)){
+            float max = 100;
+            Pole.position = Balls[0].position;
+            Pole.point = GetMousePosition();
+            Pole.finalPoint = Pole.point;
+        }
+        
+        if(IsMouseButtonReleased(MOUSE_BUTTON_LEFT)){
+            Pole.position = {0, 0};
+            Pole.point = {0, 0};
+            Pole.finalPoint = {0, 0};
+        }
+
         // Does Vector - Scalar multiplication with the sum of all forces and the inverse mass of the ball
         Balls[0].acceleration = Vector2Scale(forces, Balls[0].inverse_mass);
         
@@ -91,6 +111,10 @@ int main() {
                 Balls[i].velocity = Vector2Add(Balls[i].velocity, Vector2Scale(Balls[i].acceleration, TIMESTEP));
             // Reduces the velocity by applying friction using v(n) = v(n - 1) - b / m * v(n - 1) * t
                 Balls[i].velocity = Vector2Subtract(Balls[i].velocity, Vector2Scale(Balls[i].velocity, FRICTION * Balls[i].inverse_mass * TIMESTEP));
+                if(Vector2Length(Balls[i].velocity) < 0.2f){
+                    Balls[i].velocity = {0, 0};
+                }
+
             // Computes for change in position using x(t + dt) = x(t) + (v(t + dt) * dt)
                 Balls[i].position = Vector2Add(Balls[i].position, Vector2Scale(Balls[i].velocity, TIMESTEP));
                 
@@ -173,6 +197,7 @@ int main() {
         for(int i = 0; i < 4; i++){
             DrawCircleV(Holes[i].position, Holes[i].radius, Holes[i].color);
         }
+        DrawLineEx(Pole.position, Pole.finalPoint, 5.0f, Pole.color);
         EndDrawing();
     }
     CloseWindow();
