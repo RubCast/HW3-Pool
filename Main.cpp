@@ -21,10 +21,10 @@ struct Circle {
 
 Circle Balls[5] = {
     {400, 400, 30.0f, true, WHITE, 30.0f, 1 / Balls[0].mass,Vector2Zero(), Vector2Zero()}, 
-    {100, 100, 30.0f, false, RED, 50.0f, 1 / Balls[1].mass, Vector2Zero(), Vector2Zero()},
-    {150, 150, 30.0f, false, ORANGE, 50.0f, 1 / Balls[2].mass, Vector2Zero(), Vector2Zero()},
-    {200, 200, 30.0f, false, YELLOW, 50.0f, 1 / Balls[3].mass, Vector2Zero(), Vector2Zero()},
-    {200, 200, 30.0f, false, BLUE, 50.0f, 1 / Balls[4].mass, Vector2Zero(), Vector2Zero()}
+    {100, 100, 30.0f, false, RED, 30.0f, 1 / Balls[1].mass, Vector2Zero(), Vector2Zero()},
+    {150, 150, 30.0f, false, ORANGE, 30.0f, 1 / Balls[2].mass, Vector2Zero(), Vector2Zero()},
+    {200, 200, 30.0f, false, YELLOW, 30.0f, 1 / Balls[3].mass, Vector2Zero(), Vector2Zero()},
+    {200, 400, 30.0f, false, BLUE, 30.0f, 1 / Balls[4].mass, Vector2Zero(), Vector2Zero()}
 };
 
 Circle Holes[4] = {
@@ -55,6 +55,8 @@ struct Pole {
     Vector2 position;
     Color color;
     Vector2 click_origin;
+    Vector2 difference;
+
 }Pole;
 
 int main() {
@@ -68,6 +70,13 @@ int main() {
     float elasticity = 1; 
     while (!WindowShouldClose()) {
         float delta_time = GetFrameTime();
+        if(IsKeyPressed(KEY_SPACE)){
+            Balls[0] = {400, 400, 30.0f, true, WHITE, 30.0f, 1 / Balls[0].mass,Vector2Zero(), Vector2Zero()};
+            Balls[1] = {100, 100, 30.0f, false, RED, 30.0f, 1 / Balls[1].mass, Vector2Zero(), Vector2Zero()};
+            Balls[2] = {150, 150, 30.0f, false, ORANGE, 30.0f, 1 / Balls[2].mass, Vector2Zero(), Vector2Zero()};
+            Balls[3] = {200, 200, 30.0f, false, YELLOW, 30.0f, 1 / Balls[3].mass, Vector2Zero(), Vector2Zero()};
+            Balls[4] = {200, 400, 30.0f, false, BLUE, 30.0f, 1 / Balls[4].mass, Vector2Zero(), Vector2Zero()};
+        }
         if(is_moving == false){
             if(IsMouseButtonDown(MOUSE_BUTTON_LEFT)){
                 Pole.click_origin = Balls[0].position;
@@ -76,8 +85,8 @@ int main() {
         
             if(IsMouseButtonReleased(MOUSE_BUTTON_LEFT)){
                 is_moving = true;
-                Vector2 difference = Vector2Negate(Vector2Subtract(Pole.position, Pole.click_origin));
-                Balls[0].velocity = Vector2Add(Balls[0].velocity, Vector2Scale(difference, .10f));
+                Pole.difference = Vector2Negate(Vector2Subtract(Pole.position, Pole.click_origin));
+                Balls[0].velocity = Vector2Add(Balls[0].velocity, Vector2Scale(Pole.difference, .10f));
                 Pole.click_origin = Vector2Zero();
                 Pole.position = Vector2Zero();
             }
