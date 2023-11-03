@@ -23,7 +23,7 @@ Circle Balls[5] = {
     {400, 400, 30.0f, true, WHITE, 30.0f, 1 / Balls[0].mass,Vector2Zero(), Vector2Zero()}, 
     {100, 100, 30.0f, false, RED, 50.0f, 1 / Balls[1].mass, Vector2Zero(), Vector2Zero()},
     {150, 150, 30.0f, false, ORANGE, 50.0f, 1 / Balls[2].mass, Vector2Zero(), Vector2Zero()},
-    {200, 200, 30.0f, false, YELLOW, 50.0f, 1 / Balls[3].mass, Vector2Zero(), Vector2Zero()},
+    {200, 300, 30.0f, false, YELLOW, 50.0f, 1 / Balls[3].mass, Vector2Zero(), Vector2Zero()},
     {200, 200, 30.0f, false, BLUE, 50.0f, 1 / Balls[4].mass, Vector2Zero(), Vector2Zero()}
 };
 
@@ -89,7 +89,7 @@ int main() {
         else if(is_moving == true){       
             // Does Vector - Scalar multiplication with the sum of all forces and the inverse mass of the ball
             Balls[0].position = Vector2Add(Balls[0].position, Balls[0].velocity);
-            Balls[0].acceleration = Vector2Scale(Balls[0].velocity, 0.95f);
+            Balls[0].acceleration = Vector2Scale(Balls[0].velocity, 0.95);
             
             accumulator += delta_time;
             while(accumulator >= TIMESTEP) {
@@ -149,6 +149,7 @@ int main() {
 
                             Balls[i].velocity = Vector2Subtract(Balls[i].velocity, Vector2Scale(collisionNorm, impulse * Balls[i].inverse_mass));
                             Balls[x].velocity = Vector2Add(Balls[x].velocity, Vector2Scale(collisionNorm, impulse * Balls[x].inverse_mass));
+                        
                         } 
                     }
                     
