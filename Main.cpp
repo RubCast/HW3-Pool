@@ -6,7 +6,7 @@ const int WINDOW_WIDTH = 800;
 const int WINDOW_HEIGHT = 600;
 const float FPS = 60;
 const float TIMESTEP = 1 / FPS; // Sets the timestep to 1 / FPS. But timestep can be any very small value.
-const float FRICTION = 50.0f;
+const float FRICTION = 2.0f;
 
 struct Circle {
     Vector2 position;
@@ -20,11 +20,11 @@ struct Circle {
 };
 
 Circle Balls[5] = {
-    {400, 400, 30.0f, true, WHITE, 30.0f, 1 / Balls[0].mass,Vector2Zero(), Vector2Zero()}, 
-    {100, 100, 30.0f, false, RED, 30.0f, 1 / Balls[1].mass, Vector2Zero(), Vector2Zero()},
-    {150, 150, 30.0f, false, ORANGE, 30.0f, 1 / Balls[2].mass, Vector2Zero(), Vector2Zero()},
-    {200, 200, 30.0f, false, YELLOW, 30.0f, 1 / Balls[3].mass, Vector2Zero(), Vector2Zero()},
-    {200, 400, 30.0f, false, BLUE, 30.0f, 1 / Balls[4].mass, Vector2Zero(), Vector2Zero()}
+    {400, 400, 30.0f, true, WHITE, 1.0f, 1 / Balls[0].mass,Vector2Zero(), Vector2Zero()}, 
+    {100, 100, 30.0f, false, RED, 1.0f, 1 / Balls[1].mass, Vector2Zero(), Vector2Zero()},
+    {150, 150, 30.0f, false, ORANGE, 1.0f, 1 / Balls[2].mass, Vector2Zero(), Vector2Zero()},
+    {200, 200, 30.0f, false, YELLOW, 1.0f, 1 / Balls[3].mass, Vector2Zero(), Vector2Zero()},
+    {200, 400, 30.0f, false, BLUE, 1.0f, 1 / Balls[4].mass, Vector2Zero(), Vector2Zero()}
 };
 
 Circle Holes[4] = {
@@ -71,11 +71,11 @@ int main() {
     while (!WindowShouldClose()) {
         float delta_time = GetFrameTime();
         if(IsKeyPressed(KEY_SPACE)){
-            Balls[0] = {400, 400, 30.0f, true, WHITE, 30.0f, 1 / Balls[0].mass,Vector2Zero(), Vector2Zero()};
-            Balls[1] = {100, 100, 30.0f, false, RED, 30.0f, 1 / Balls[1].mass, Vector2Zero(), Vector2Zero()};
-            Balls[2] = {150, 150, 30.0f, false, ORANGE, 30.0f, 1 / Balls[2].mass, Vector2Zero(), Vector2Zero()};
-            Balls[3] = {200, 200, 30.0f, false, YELLOW, 30.0f, 1 / Balls[3].mass, Vector2Zero(), Vector2Zero()};
-            Balls[4] = {200, 400, 30.0f, false, BLUE, 30.0f, 1 / Balls[4].mass, Vector2Zero(), Vector2Zero()};
+            Balls[0] = {400, 400, 5.0f, true, WHITE, 1.0f, 1 / Balls[0].mass,Vector2Zero(), Vector2Zero()};
+            Balls[1] = {100, 100, 5.0f, false, RED, 1.0f, 1 / Balls[1].mass, Vector2Zero(), Vector2Zero()};
+            Balls[2] = {150, 150, 5.0f, false, ORANGE, 1.0f, 1 / Balls[2].mass, Vector2Zero(), Vector2Zero()};
+            Balls[3] = {200, 200, 5.0f, false, YELLOW, 1.0f, 1 / Balls[3].mass, Vector2Zero(), Vector2Zero()};
+            Balls[4] = {200, 400, 5.0f, false, BLUE, 1.0f, 1 / Balls[4].mass, Vector2Zero(), Vector2Zero()};
         }
         if(is_moving == false){
             if(IsMouseButtonDown(MOUSE_BUTTON_LEFT)){
@@ -86,7 +86,7 @@ int main() {
             if(IsMouseButtonReleased(MOUSE_BUTTON_LEFT)){
                 is_moving = true;
                 Pole.difference = Vector2Negate(Vector2Subtract(Pole.position, Pole.click_origin));
-                Balls[0].velocity = Vector2Add(Balls[0].velocity, Vector2Scale(Pole.difference, .10f));
+                Balls[0].velocity = Vector2Add(Balls[0].velocity, Vector2Scale(Pole.difference, 2.0f));
                 Pole.click_origin = Vector2Zero();
                 Pole.position = Vector2Zero();
             }
@@ -95,11 +95,8 @@ int main() {
     	// ------------
         // PHYSICS STEP
         // ------------
-        else if(is_moving == true){       
-            // Does Vector - Scalar multiplication with the sum of all forces and the inverse mass of the ball
-            Balls[0].position = Vector2Add(Balls[0].position, Balls[0].velocity);
-            Balls[0].acceleration = Vector2Scale(Balls[0].velocity, 0.95f);
-            
+        else if(is_moving == true){    
+            Balls[0].acceleration = Vector2Scale(Balls[0].velocity, 0.95f);   
             accumulator += delta_time;
             while(accumulator >= TIMESTEP) {
                 // ------ SEMI-IMPLICIT EULER INTEGRATION -------
@@ -108,13 +105,12 @@ int main() {
                     Balls[i].velocity = Vector2Add(Balls[i].velocity, Vector2Scale(Balls[i].acceleration, TIMESTEP));
                 // Reduces the velocity by applying friction using v(n) = v(n - 1) - b / m * v(n - 1) * t
                     Balls[i].velocity = Vector2Subtract(Balls[i].velocity, Vector2Scale(Balls[i].velocity, FRICTION * Balls[i].inverse_mass * TIMESTEP));
+                // Computes for change in position using x(t + dt) = x(t) + (v(t + dt) * dt)
+                    Balls[i].position = Vector2Add(Balls[i].position, Vector2Scale(Balls[i].velocity, TIMESTEP));
                     if(Vector2Length(Balls[i].velocity) < 0.1f){
                         Balls[i].velocity = {0, 0};
                     }
 
-                // Computes for change in position using x(t + dt) = x(t) + (v(t + dt) * dt)
-                    Balls[i].position = Vector2Add(Balls[i].position, Vector2Scale(Balls[i].velocity, TIMESTEP));
-                    
                     // Holes Collisions
                     for(int x = 0; x < 5; x++){
                         float totalRadius = Balls[x].radius + Holes[i].radius;
@@ -127,6 +123,7 @@ int main() {
                         if ((totalRadius >= distanceBetweenCircles) && (approachCheck < 0)){
                             float impulse = -(((1 + elasticity) * Vector2DotProduct(relativeVelocity, collisionNorm))
                             /((Vector2DotProduct(collisionNorm, collisionNorm)) * (Holes[i].inverse_mass + Balls[x].inverse_mass)));
+
                             if(Balls[x].is_cue == true){
                                 Balls[x].position.x = 400;
                                 Balls[x].position.y = 400;
@@ -142,7 +139,7 @@ int main() {
                     // This is for all other circles
                     for(int x = 0; x < 5; x++){
                         if(x == i){
-                            x++;
+                            continue;
                         }
 
                         float totalRadius = Balls[x].radius + Balls[i].radius;
@@ -180,6 +177,7 @@ int main() {
                         }
                     }
                 }
+
                 bool moving = false;
                 for(int i = 0; i < 5; i++){
                     if((Balls[i].velocity.x != 0) && (Balls[i].velocity.y != 0)){
